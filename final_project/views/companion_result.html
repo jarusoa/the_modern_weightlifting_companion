@@ -1,0 +1,321 @@
+<%
+# Import info from form
+from bottle import request
+squatMax = request.forms.get("squatMax")
+benchMax = request.forms.get("benchMax")
+deadliftMax = request.forms.get("deadliftMax")
+lift = request.forms.get("lift")
+baseWeight = request.forms.get("base_weight")
+weightType = request.forms.get("weightType")
+convert = request.forms.get("convert")
+reps = request.forms.get("reps")
+maxType = request.forms.get("maxType")
+
+# Make RPE scale one with perecents and one with indexs.
+rpe_percents = [0.73, 0.75, 0.77, 0.79, 0.81, 0.863, 0.878, 0.892, 0.907, 0.929, 0.939, 0.955, 0.978, 1.0]
+rpe_scale = [1, 2, 3, 4, 5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10]
+
+# Function to make sure number of plates stays even as the bar in real life cant be uneven.
+def find_Plates(weight):
+    if (weight % 2) == 0:
+        weight = int(weight)
+        return weight
+    elif weight % 2 == 1:
+        weight = int(weight - 1)
+        return weight
+end
+end
+# Function  to get the closest value in rpe_percents when I go to calculate RPE.
+def closest_value(list, value):
+    difference = lambda list : abs(list - value)
+    res = min(list, key=difference)
+    return res
+end
+#Simple function to convert KGS into LBS.
+def convert_to_LBS(value):
+    value = float(value)
+    value = round(value / 0.5) * 0.5
+    value = value * 2.205
+    value = round(value / 5) * 5
+    return value
+end
+
+if maxType == "KG":
+    squatMax = convert_to_LBS(squatMax)
+    benchMax = convert_to_LBS(benchMax)
+    deadliftMax = convert_to_LBS(deadliftMax)
+
+end
+if weightType == "KG":
+    displayWeight = round((float(baseWeight)) / 0.5) * 0.5
+    baseWeight = float(baseWeight)
+    baseWeight = round(baseWeight / 0.5) * 0.5
+    baseWeight = baseWeight * 2.205
+    baseWeight = round(baseWeight / 5) * 5
+elif weightType == "LBS":
+    baseWeight = float(baseWeight)
+    displayWeight = baseWeight / 2.205
+    displayWeight = round(displayWeight / 0.5) * 0.5
+    baseWeight = round(baseWeight / 5) * 5
+
+end
+if lift == "squat":
+    squatMax = float(squatMax)
+    lookupWeight = baseWeight / squatMax
+    percent = closest_value(rpe_percents,lookupWeight)
+    RPE_index = (rpe_percents.index(percent))
+    RPE = (rpe_scale[RPE_index])
+elif lift == "bench":
+    benchMax = float(benchMax)
+    lookupWeight = baseWeight / benchMax
+    percent = closest_value(rpe_percents,lookupWeight)
+    RPE_index = (rpe_percents.index(percent))
+    RPE = (rpe_scale[RPE_index])
+elif lift == "deadlift":
+    deadliftMax = float(deadliftMax)
+    lookupWeight = baseWeight / deadliftMax
+    percent = closest_value(rpe_percents,lookupWeight)
+    RPE_index = (rpe_percents.index(percent))
+    RPE = (rpe_scale[RPE_index])
+end
+# This if statment adds one to RPE after 1 rep only if the the weight is acertain percent of 1RM
+if reps != 1:
+    for i in range(1, int(reps)):
+            RPE += 1
+
+end
+# This code simply makes sure that if someone puts a really low weight it will not add RPE and will make it show right to the user.
+if RPE < 5:
+    RPE = " < 5"
+elif RPE > 10:
+    RPE = " > 10"
+end
+if lookupWeight > 1.00:
+    RPE = " > 10"
+elif lookupWeight < 0.63:
+    RPE = " < 5"
+end
+
+# Program for finding lb plates
+lbs_left = baseWeight
+lbs_left = lbs_left - 45
+
+fortyfive_LBS = (lbs_left // 45)
+fortyfive_LBS = find_Plates(fortyfive_LBS)
+lbs_left  = lbs_left - (fortyfive_LBS * 45)
+
+thirtyfive_LBS = (lbs_left // 35)
+thirtyfive_LBS = find_Plates(thirtyfive_LBS)
+lbs_left  = lbs_left - (thirtyfive_LBS * 35)
+
+twentyfive_LBS = (lbs_left // 25)
+twentyfive_LBS = find_Plates(twentyfive_LBS)
+lbs_left  = lbs_left - (twentyfive_LBS * 25)
+
+ten_LBS = (lbs_left // 10)
+ten_LBS = find_Plates(ten_LBS)
+lbs_left  = lbs_left - (ten_LBS * 10)
+
+five_LBS = (lbs_left // 5)
+five_LBS = find_Plates(five_LBS)
+lbs_left  = lbs_left - (five_LBS * 5)
+
+
+two_half_LBS = (lbs_left // 2.5)
+two_half_LBS = find_Plates(two_half_LBS)
+lbs_left  = lbs_left - (two_half_LBS * 45)
+
+# Program for finding kilo plates
+kgs_left = displayWeight
+kgs_left = kgs_left - 20
+
+twentyfive_KGS = (kgs_left // 25)
+twentyfive_KGS = find_Plates(twentyfive_KGS)
+kgs_left  = kgs_left - (twentyfive_KGS * 25)
+
+twenty_KGS = (kgs_left // 20)
+twenty_KGS = find_Plates(twenty_KGS)
+kgs_left  = kgs_left - (twenty_KGS * 20)
+
+fifteen_KGS = (kgs_left // 15)
+fifteen_KGS = find_Plates(fifteen_KGS)
+kgs_left  = kgs_left - (fifteen_KGS * 15)
+
+ten_KGS = (kgs_left // 10)
+ten_KGS = find_Plates(ten_KGS)
+kgs_left  = kgs_left - (ten_KGS * 10)
+
+five_KGS = (kgs_left // 5)
+five_KGS = find_Plates(five_KGS)
+kgs_left  = kgs_left - (five_KGS * 5)
+
+two_half_KGS = (kgs_left // 2.5)
+two_half_KGS = find_Plates(two_half_KGS)
+kgs_left  = kgs_left - (two_half_KGS * 2.5)
+
+one_twofive_KGS = (kgs_left // 1.25)
+one_twofive_KGS = find_Plates(one_twofive_KGS)
+kgs_left  = kgs_left - (one_twofive_KGS * 1.25)
+
+half_KGS = (kgs_left // 0.5)
+half_KGS = find_Plates(half_KGS)
+kgs_left  = kgs_left - (half_KGS * 0.5)
+
+fourth_KGS = (kgs_left // 0.25)
+fourth_KGS = find_Plates(fourth_KGS)
+kgs_left  = kgs_left - (fourth_KGS * 0.25)
+
+%>
+
+<!DOCTYPE html>
+<html lang = "en-us">
+<head>
+  <title>Set Calculated</title>
+  <meta charset = "utf-8"
+  />
+  <style>
+h1{
+    font-size:55px;
+    margin-top: 70px;
+    margin-left: 60px;
+}
+p{
+    font-size:30px;
+    margin-top: 50px;
+    margin-left: 90px;
+}
+{
+  font-family: sans-serif, Helvetica,;
+}
+
+.content-table {
+  margin: 25px 0;
+  font-size: 2em;
+  min-width: 250px;
+  border-radius: 5px 5px 0 0;
+  overflow: hidden;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+}
+
+.content-table thead tr {
+  background-color: #000000;
+  color: #000000;
+  font-weight: bold;
+}
+
+.content-table th,
+.content-table td {
+  padding: 15px 20px;
+}
+
+.content-table tbody tr {
+  border-bottom: 1px solid #dddddd;
+}
+
+.content-table tbody tr:nth-of-type(even) {
+  background-color: #f3f3f3;
+}
+
+.content-table tbody tr:last-of-type {
+  border-bottom: 2px solid #000000;
+}
+
+.content-table tbody tr.active-row {
+  font-weight: bold;
+  color:#000000;
+}
+  </style>
+</head>
+<body>
+  <h1>Workout Set:</h1>
+  <p>
+    Weight in LBS: {{baseWeight}}
+  </p>
+  <p>
+    Weight in Kilos : {{displayWeight}}
+  </p>
+  <p>
+    Amount of Reps: {{reps}}
+  </p>
+  <p>
+    RPE : {{RPE}}
+  </p>
+
+
+        <table class="content-table" style="margin-top:-400px; margin-left:500px;">
+        <caption>{{baseWeight}} LBS On The Bar!</caption>
+        <tr>
+           <th>Plate Type</th>
+           <th>Pairs</th>
+        </tr>
+        <tr>
+
+           <td> 45 LBS </td>
+           <td>{{int(fortyfive_LBS / 2)}}</td>
+        </tr>
+         <tr>
+           <td> 35 LBS </td>
+           <td>{{int(thirtyfive_LBS / 2)}}</td>
+        </tr>
+         <tr>
+           <td> 25 LBS </td>
+           <td>{{int(twentyfive_LBS / 2)}}</td>
+        </tr>
+         <tr>
+           <td> 10 LBS </td>
+           <td>{{int(ten_LBS / 2)}}</td>
+        </tr>
+         <tr>
+           <td> 5 LBS </td>
+           <td>{{int(five_LBS / 2)}}</td>
+        </tr>
+         <tr>
+           <td> 2.5 LBS </td>
+           <td>{{int(two_half_LBS / 2)}}</td>
+        </tr>
+    </table>
+    <table class="content-table kilo-table" style="margin-top:-620px; margin-left:900px;">
+        <caption>{{displayWeight}} KGS On The Bar!</caption>
+        <tr>
+           <th>Plate Type</th>
+           <th>Pairs</th>
+        </tr>
+        <tr>
+           <td style="background-color: #d60419"> 25 KG </td>
+           <td>{{int(twentyfive_KGS / 2)}}</td>
+        </tr>
+         <tr>
+           <td style="background-color: #1054de"> 20 KG </td>
+           <td>{{int(twenty_KGS / 2)}}</td>
+        </tr>
+         <tr>
+           <td style="background-color: #fff200"> 15 KG </td>
+           <td>{{int(fifteen_KGS / 2)}}</td>
+        </tr>
+         <tr>
+           <td style="background-color: #348f00"> 10 KG </td>
+           <td>{{int(ten_KGS / 2)}}</td>
+        </tr>
+         <tr>
+           <td style="background-color: #ffffff"> 5 KG </td>
+           <td>{{int(five_KGS / 2)}}</td>
+        </tr>
+         <tr>
+           <td style="background-color: #575757"> 2.5 KG </td>
+           <td>{{int(two_half_KGS / 2)}}</td>
+         </tr>
+          <tr>
+           <td style="background-color: #828282"> 1.25 KG </td>
+           <td>{{int(one_twofive_KGS / 2)}}</td>
+         </tr>
+          <tr>
+           <td style="background-color: #828282"> 0.5 KG </td>
+           <td>{{int(half_KGS / 2)}}</td>
+         </tr>
+          <tr>
+           <td style="background-color: #828282"> 0.25 KG </td>
+           <td>{{int(fourth_KGS / 2)}}</td>
+         </tr>
+    </table>
+</body>
+</html>
